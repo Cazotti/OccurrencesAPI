@@ -16,7 +16,7 @@ class OccurrenceService {
     description,
     code,
     registerAt
-  }:{
+  }: {
     description: string;
     code: string;
     registerAt: Date;
@@ -26,6 +26,10 @@ class OccurrenceService {
       code,
       registerAt
     })
+  }
+
+  async list(): Promise<Occurrence[]> {
+    return this.occurrenceRepository.list();
   }
 }
 

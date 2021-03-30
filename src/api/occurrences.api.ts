@@ -48,7 +48,27 @@ const OccurrenceApi = (): AppRouter => {
         apiErrorHandler.handle(error, res);
       }
     }
-  })
+  });
+
+  appRouter.get(ROUTE, {
+    auth: userAuthenticator,
+    summary: 'Listagem de ocorrências',
+    responseSchema: {
+      200: Joi.array().items(occurrenceSchema).description('OK'),
+    }
+  }, async (req: AppRequest, res: any) => {
+    const logger = getLogger(req);
+    const apiErrorHandler = getApiErrorHandler({ logger });
+    const occurrenceService =  getOccurrenceService();
+
+    try {
+      const occurrences = await occurrenceService.list();
+
+      res.json(occurrences);
+    } catch (error) {
+      apiErrorHandler.handle(error, res);
+    }
+  });
 
   return appRouter;
 }

@@ -1,8 +1,8 @@
-import { Sequelize, UniqueConstraintError } from 'sequelize';
+import { Sequelize } from 'sequelize';
 
 import { Occurrence as OccurrenceDbModel } from '../database/models/occurrence';
 import Occurrence, { OccurrenceAttributes } from '../models/occurrence.model';
-import BadRequestError from "../errors/repositories/occurrence.repository"
+import { OccurrenceRepositorryCreatedError } from "../errors/repositories/occurrence.repository"
 import OccurrenceParser from '../database/parsers/occurrence.parser';
 
 interface OccurrenceRepositoryDependencies {
@@ -22,7 +22,7 @@ class OccurrenceRepository {
     this.occurrenceParser = occurrenceParser;
   }
 
-  async create(occurrence: Omit<OccurrenceAttributes, 'id'>): Promise<Occurrence>{
+  async create(occurrence: Omit<OccurrenceAttributes, 'id'>): Promise<Occurrence> {
     const { description, code, registerAt } = occurrence;
     try {
       const createdOccurrence = await OccurrenceDbModel.create({
@@ -32,11 +32,16 @@ class OccurrenceRepository {
       });
       return this.parse(createdOccurrence);
     } catch (error) {
-      if (error instanceof BadRequestError) {
-        throw new BadRequestError(occurrence);
+      if (error instanceof OccurrenceRepositorryCreatedError) {
+        throw new OccurrenceRepositorryCreatedError(occurrence);
       }
       throw error;
     }
+  }
+
+  async list(): Promise<Occurrence[]> {
+    const occurrences = await OccurrenceDbModel.findAll();
+    return occurrences.map(dbModels => this.occurrenceParser.parse(dbModels));
   }
 
   private parse(dbModel: OccurrenceDbModel): Occurrence {

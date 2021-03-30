@@ -1,11 +1,19 @@
-import { BaseError, BaseErrorAttributes } from '@enviabybus/utility-belt';
+import { BaseError } from '@enviabybus/utility-belt';
+import { JSONSchema4 } from 'json-schema';
 
-export type BadRequestErrorAttributes = BaseErrorAttributes;
+export class OccurrenceErrorAttributes extends BaseError { };
 
-export class BadRequestError extends BaseError implements BadRequestErrorAttributes {
-  constructor({ code = 'bad_request', message = 'bad request'}: BadRequestErrorAttributes) {
-    super({ code, message });
+export class OccurrenceRepositorryCreatedError extends OccurrenceErrorAttributes {
+  details?: JSONSchema4;
+
+  constructor(params: JSONSchema4) {
+    super({
+      code: 'occurrence_created_error',
+      message: 'Could not create occurrence with these params'
+    });
+
+    this.details = {
+      params
+    }
   }
 }
-
-export default BadRequestError;
