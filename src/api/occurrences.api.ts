@@ -2,6 +2,7 @@ import { AppRequest, AppRouter, InvalidParamsError, Logger } from '@enviabybus/u
 import express from 'express';
 import Joi from 'joi';
 
+import { OccurrenceRepositoryNotFoundError } from '../errors/repositories/occurrence.repository';
 import { getApiErrorHandler, getGandalfAuthenticator, getOccurrenceService } from '../initializer';
 
 const OccurrenceApi = (): AppRouter => {
@@ -27,8 +28,8 @@ const OccurrenceApi = (): AppRouter => {
       }),
     },
     responseSchema: {
-      201: occurrenceSchema.description('Created')
-    }
+      201: occurrenceSchema.description('Created'),
+    },
   }, async (req: AppRequest, res: any) => {
     const logger = getLogger(req);
     const apiErrorHandler = getApiErrorHandler({ logger });
@@ -55,7 +56,7 @@ const OccurrenceApi = (): AppRouter => {
     summary: 'Listagem de ocorrências',
     responseSchema: {
       200: Joi.array().items(occurrenceSchema).description('OK'),
-    }
+    },
   }, async (req: AppRequest, res: any) => {
     const logger = getLogger(req);
     const apiErrorHandler = getApiErrorHandler({ logger });
@@ -67,6 +68,37 @@ const OccurrenceApi = (): AppRouter => {
       res.json(occurrences);
     } catch (error) {
       apiErrorHandler.handle(error, res);
+    }
+  });
+
+  appRouter.get(`${ROUTE}/:id`, {
+    auth: userAuthenticator,
+    summary: 'Busca de ocorrência por ID',
+    requestSchema: {
+      params: Joi.object({
+        id: Joi.number().positive().required(),
+      }),
+    },
+    responseSchema: {
+      200: occurrenceSchema.description('OK'),
+    },
+  }, async (req: AppRequest, res: any) => {
+    const logger = getLogger(req);
+    const apiErrorHandler = getApiErrorHandler({ logger });
+    const occurrenceService =  getOccurrenceService();
+
+    try {
+      const { params } = req;
+      const id = Number(params.id);
+
+      const occurrence = await occurrenceService.findById(id);
+      res.json(occurrence);
+    } catch (error) {
+      if (error instanceof OccurrenceRepositoryNotFoundError) {
+        apiErrorHandler.handle(error, res, 404);
+      } else {
+        apiErrorHandler.handle(error, res);
+      }
     }
   });
 

@@ -1,19 +1,28 @@
 import { BaseError } from '@enviabybus/utility-belt';
 import { JSONSchema4 } from 'json-schema';
 
-export class OccurrenceErrorAttributes extends BaseError { };
+export class OccurrenceRepositoryError extends BaseError { };
 
-export class OccurrenceRepositorryCreatedError extends OccurrenceErrorAttributes {
+export class OccurrenceRepositoryCreationError extends OccurrenceRepositoryError {
   details?: JSONSchema4;
 
   constructor(params: JSONSchema4) {
     super({
-      code: 'occurrence_created_error',
+      code: 'occurrence_creation_error',
       message: 'Could not create occurrence with these params'
     });
 
     this.details = {
       params
     }
+  }
+}
+
+export class OccurrenceRepositoryNotFoundError extends OccurrenceRepositoryError {
+  constructor(property: string, value?: string) {
+    super({
+      code: 'occurrence_not_found',
+      message: `Occurrence not found by ${property}: ${value}`,
+    });
   }
 }

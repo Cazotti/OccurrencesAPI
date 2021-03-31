@@ -1,3 +1,4 @@
+import { QueryOptions } from 'sequelize/types';
 import Occurrence from '../models/occurrence.model';
 import OccurrenceRepository from '../repositories/occurrence.repository';
 
@@ -30,6 +31,10 @@ class OccurrenceService {
 
   async list(): Promise<Occurrence[]> {
     return this.occurrenceRepository.list();
+  }
+
+  async findById(id: number): Promise<Occurrence> {
+    return this.occurrenceRepository.findById(id);
   }
 }
 

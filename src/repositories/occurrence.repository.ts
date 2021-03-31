@@ -1,8 +1,8 @@
-import { Sequelize } from 'sequelize';
+import { EmptyResultError, Sequelize } from 'sequelize';
 
 import { Occurrence as OccurrenceDbModel } from '../database/models/occurrence';
 import Occurrence, { OccurrenceAttributes } from '../models/occurrence.model';
-import { OccurrenceRepositorryCreatedError } from "../errors/repositories/occurrence.repository"
+import { OccurrenceRepositoryCreationError, OccurrenceRepositoryNotFoundError } from "../errors/repositories/occurrence.repository"
 import OccurrenceParser from '../database/parsers/occurrence.parser';
 
 interface OccurrenceRepositoryDependencies {
@@ -32,8 +32,8 @@ class OccurrenceRepository {
       });
       return this.parse(createdOccurrence);
     } catch (error) {
-      if (error instanceof OccurrenceRepositorryCreatedError) {
-        throw new OccurrenceRepositorryCreatedError(occurrence);
+      if (error instanceof OccurrenceRepositoryCreationError) {
+        throw new OccurrenceRepositoryCreationError(occurrence);
       }
       throw error;
     }
@@ -42,6 +42,20 @@ class OccurrenceRepository {
   async list(): Promise<Occurrence[]> {
     const occurrences = await OccurrenceDbModel.findAll();
     return occurrences.map(dbModels => this.occurrenceParser.parse(dbModels));
+  }
+
+  async findById(id: number): Promise<Occurrence> {
+    try {
+      const occurrence = await OccurrenceDbModel.findOne({ rejectOnEmpty: true, where: { id } });
+
+      return this.occurrenceParser.parse(occurrence);
+    } catch (error) {
+      if (error instanceof EmptyResultError) {
+        throw new OccurrenceRepositoryNotFoundError('id', id.toString());
+      }
+
+      throw error;
+    }
   }
 
   private parse(dbModel: OccurrenceDbModel): Occurrence {
