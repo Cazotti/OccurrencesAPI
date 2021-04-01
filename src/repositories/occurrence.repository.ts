@@ -1,8 +1,12 @@
 import { EmptyResultError, Sequelize } from 'sequelize';
+import { isNil, omitBy } from 'lodash';
 
 import { Occurrence as OccurrenceDbModel } from '../database/models/occurrence';
 import Occurrence, { OccurrenceAttributes } from '../models/occurrence.model';
-import { OccurrenceRepositoryCreationError, OccurrenceRepositoryNotFoundError } from "../errors/repositories/occurrence.repository"
+import {
+  OccurrenceRepositoryCreationError,
+  OccurrenceRepositoryNotFoundError,
+  } from "../errors/repositories/occurrence.repository";
 import OccurrenceParser from '../database/parsers/occurrence.parser';
 
 interface OccurrenceRepositoryDependencies {
@@ -56,6 +60,29 @@ class OccurrenceRepository {
 
       throw error;
     }
+  }
+
+  async update(id: number, {
+    description,
+    code,
+    registerAt,
+  }: {
+    description?: string;
+    code?: string;
+    registerAt?: Date;
+  }): Promise<boolean> {
+    const attributes = omitBy({
+      description,
+      code,
+      registerAt,
+    }, isNil);
+
+    const occurrenceUpdated = await OccurrenceDbModel.update(attributes, { where: { id } });
+    if(occurrenceUpdated[0] === 0) {
+      throw new OccurrenceRepositoryNotFoundError('id', id.toString());
+    }
+
+    return true;
   }
 
   private parse(dbModel: OccurrenceDbModel): Occurrence {

@@ -1,4 +1,3 @@
-import { QueryOptions } from 'sequelize/types';
 import Occurrence from '../models/occurrence.model';
 import OccurrenceRepository from '../repositories/occurrence.repository';
 
@@ -35,6 +34,22 @@ class OccurrenceService {
 
   async findById(id: number): Promise<Occurrence> {
     return this.occurrenceRepository.findById(id);
+  }
+
+  async update(id: number, {
+    description,
+    code,
+    registerAt
+  }: {
+    description?: string;
+    code?: string;
+    registerAt?: Date;
+  }): Promise<boolean> {
+    return this.occurrenceRepository.update(id, {
+      description,
+      code,
+      registerAt
+    });
   }
 }
 

@@ -2,8 +2,8 @@ import { AppRequest, AppRouter, InvalidParamsError, Logger } from '@enviabybus/u
 import express from 'express';
 import Joi from 'joi';
 
-import { OccurrenceRepositoryNotFoundError } from '../errors/repositories/occurrence.repository';
 import { getApiErrorHandler, getGandalfAuthenticator, getOccurrenceService } from '../initializer';
+import { OccurrenceRepositoryNotFoundError } from '../errors/repositories/occurrence.repository';
 
 const OccurrenceApi = (): AppRouter => {
   const appRouter = new AppRouter(express.Router());
@@ -96,6 +96,46 @@ const OccurrenceApi = (): AppRouter => {
     } catch (error) {
       if (error instanceof OccurrenceRepositoryNotFoundError) {
         apiErrorHandler.handle(error, res, 404);
+      } else {
+        apiErrorHandler.handle(error, res);
+      }
+    }
+  });
+
+  appRouter.patch(`${ROUTE}/:id`, {
+    auth: userAuthenticator,
+    summary: 'Atualização de ocorrência por ID',
+    requestSchema: {
+      body: Joi.object({
+        description: Joi.string().required(),
+        code: Joi.string().required(),
+        registerAt: Joi.date().required(),
+      }).min(1),
+    },
+    responseSchema: {
+      204: occurrenceSchema.description('Updated')
+    }
+  }, async (req: AppRequest, res: any) => {
+    const logger = getLogger(req);
+    const apiErrorHandler = getApiErrorHandler({ logger });
+    const occurrenceService = getOccurrenceService();
+
+    try {
+      const { body, params: { id } } = req;
+      const { description, code, registerAt } = body;
+
+      await occurrenceService.update(+id, {
+        description,
+        code,
+        registerAt,
+      });
+
+      res.sendStatus(204);
+    } catch (error) {
+      if (error instanceof OccurrenceRepositoryNotFoundError) {
+        apiErrorHandler.handle(error, res, 404);
+      } else if (error instanceof InvalidParamsError) {
+        apiErrorHandler.handle(error, res, 422);
       } else {
         apiErrorHandler.handle(error, res);
       }
