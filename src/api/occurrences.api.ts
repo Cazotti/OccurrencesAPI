@@ -142,6 +142,35 @@ const OccurrenceApi = (): AppRouter => {
     }
   });
 
+  appRouter.delete(`${ROUTE}/:id`, {
+    auth: userAuthenticator,
+    summary: 'Remoção de ocorrência',
+    requestSchema: {
+      params: Joi.object({
+        id: Joi.number().positive().required(),
+      }),
+    },
+  }, async (req: AppRequest, res: any) => {
+    const logger = getLogger(req);
+    const apiErrorHandler = getApiErrorHandler({ logger });
+    const occurrenceService = getOccurrenceService();
+
+    try {
+      const { params } = req;
+      const id = Number(params.id);
+
+      await occurrenceService.destroy(id);
+
+      res.sendStatus(204);
+    } catch (error) {
+      if (error instanceof OccurrenceRepositoryNotFoundError) {
+        apiErrorHandler.handle(error, res, 404);
+      } else {
+        apiErrorHandler.handle(error, res);
+      }
+    }
+  })
+
   return appRouter;
 }
 

@@ -26,3 +26,12 @@ export class OccurrenceRepositoryNotFoundError extends OccurrenceRepositoryError
     });
   }
 }
+
+export class OccurrenceRepositoryUnexpectedError extends OccurrenceRepositoryError {
+  constructor (message: string) {
+    super ({
+      code: 'unexpected_error',
+      message
+    })
+  }
+}

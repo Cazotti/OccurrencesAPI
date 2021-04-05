@@ -6,6 +6,7 @@ import Occurrence, { OccurrenceAttributes } from '../models/occurrence.model';
 import {
   OccurrenceRepositoryCreationError,
   OccurrenceRepositoryNotFoundError,
+  OccurrenceRepositoryUnexpectedError,
   } from "../errors/repositories/occurrence.repository";
 import OccurrenceParser from '../database/parsers/occurrence.parser';
 
@@ -77,12 +78,20 @@ class OccurrenceRepository {
       registerAt,
     }, isNil);
 
-    const occurrenceUpdated = await OccurrenceDbModel.update(attributes, { where: { id } });
-    if(occurrenceUpdated[0] === 0) {
-      throw new OccurrenceRepositoryNotFoundError('id', id.toString());
+    try {
+      const occurrenceUpdated = await OccurrenceDbModel.update(attributes, { where: { id } });
+      return occurrenceUpdated[0] > 0;
+    } catch (error) {
+      throw new OccurrenceRepositoryUnexpectedError(error.message);
     }
+  }
 
-    return true;
+  async destroy(id: number): Promise<void> {
+    try {
+      await OccurrenceDbModel.destroy({ where: { id } });
+    } catch (error) {
+      throw new OccurrenceRepositoryUnexpectedError(error.message);
+    }
   }
 
   private parse(dbModel: OccurrenceDbModel): Occurrence {

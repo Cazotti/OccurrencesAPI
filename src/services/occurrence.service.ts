@@ -51,6 +51,10 @@ class OccurrenceService {
       registerAt
     });
   }
+
+  async destroy(id: number): Promise<void> {
+    await this.occurrenceRepository.destroy(id);
+  }
 }
 
 export default OccurrenceService;
